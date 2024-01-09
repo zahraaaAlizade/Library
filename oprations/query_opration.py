@@ -17,6 +17,11 @@ class AuthorOpration:
             await session.commit()
         return new_author
 
+    async def get_all_author(self):
+        async with self.db_session as session:
+            authors = await session.execute(sa.select(Author))
+        return authors.scalars().all()
+
     async def get_author_by_id(self, author_id: int):
         query = sa.select(Author).where(Author.author_id == author_id)
         async with self.db_session as session:
@@ -45,7 +50,7 @@ class BookOpration:
 
     async def get_all_books(self) -> List[Books]:
         async with self.db_session as session:
-            books_list = await session.execute(sa.select(Books).order_by(Books.book_id))
+            books_list = await session.execute(sa.select(Books))
         return books_list.scalars().all()
 
     async def get_book_by_id(self, book_id: int):
