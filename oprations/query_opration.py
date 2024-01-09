@@ -9,8 +9,8 @@ class AuthorOpration:
     def __init__(self, db_session: AsyncSession) -> None:
         self.db_session = db_session
 
-    async def create(self, name: str, biography: str):
-        new_author = Author(name=name, biography=biography)
+    async def create(self, author_id: int, name: str, biography: str):
+        new_author = Author(author_id=author_id, name=name, biography=biography)
 
         async with self.db_session as session:
             session.add(new_author)
@@ -33,8 +33,10 @@ class BookOpration:
     def __init__(self, db_session: AsyncSession) -> None:
         self.db_session = db_session
 
-    async def create_book(self, title: str, author: str, genre: str, published_date: str, isbn: str):
-        new_book = Books(title=title, author=author, genre=genre, published_date=published_date, isbn=isbn)
+    async def create_book(self, book_id: int, title: str, author: str, genre: str, published_date: str, isbn: str,
+                          quantity_available: int):
+        new_book = Books(book_id=book_id, title=title, author=author, genre=genre, published_date=published_date,
+                         isbn=isbn, quantity_available=quantity_available)
 
         async with self.db_session as session:
             session.add(new_book)
@@ -43,7 +45,7 @@ class BookOpration:
 
     async def get_all_books(self) -> List[Books]:
         async with self.db_session as session:
-            books_list = await session.execute(sa.select(Books).order_by(Books.id))
+            books_list = await session.execute(sa.select(Books).order_by(Books.book_id))
         return books_list.scalars().all()
 
     async def get_book_by_id(self, book_id: int):
@@ -62,7 +64,7 @@ class BookOpration:
         query_set = sa.select(Books).where(Books.book_id == book_id)
         update_books = sa.update(Books).where(Books.book_id == book_id)
         if title:
-            update_books = update_books.values(name=title)
+            update_books = update_books.values(title=title)
         if author:
             update_books = update_books.values(author=author)
         if genre:
