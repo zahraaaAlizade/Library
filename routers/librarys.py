@@ -4,17 +4,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db.engin import get_db
 from oprations.query_opration import AuthorOpration, BookOpration
 from schema._input import RegisterInput, AddNewBook, UpdateDetailBooks, DeleteBooks
-from db.model import Books, Author
-from typing import List
+
 
 router = APIRouter()
 
 
-# @router.get("/authors", tags=['Authors'])
-# async def get_authors(db=Depends(get_db)):
-#     authors = db.query(Author).all()
-#
-#     return authors
+@router.get("/authors", tags=['All Author'])
+async def get_all_authors(
+        db_session: Annotated[AsyncSession, Depends(get_db)]
+):
+    all_authors = await AuthorOpration(db_session).get_all_author()
+    return all_authors
 
 
 @router.post("/authors", tags=['Add Authors'])
@@ -56,16 +56,12 @@ async def get_specific_book_by_id(
     return book_detail
 
 
-def get_db():
-    db = AsyncSession()
-    return BookOpration(db)
-
-
 @router.get("/books", tags=['Get All Books'])
 async def get_all_book(
-        db_session: Annotated[AsyncSession, Depends(get_db)]) -> List[Books]:
-    # book_operation: BookOpration = Depends(get_db)) -> List[Books]:
-    return await BookOpration(db_session).get_all_books()
+        db_session: Annotated[AsyncSession, Depends(get_db)]
+):
+    all_books = await BookOpration(db_session).get_all_books()
+    return all_books
 
 
 @router.put("/books/{book_id}", tags=['Update Books'])
