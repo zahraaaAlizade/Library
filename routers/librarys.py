@@ -10,25 +10,25 @@ from typing import List
 router = APIRouter()
 
 
-@router.get("/authors", tags=['Authors'])
-async def get_authors(db=Depends(get_db)):
-    authors = db.query(Author).all()
+# @router.get("/authors", tags=['Authors'])
+# async def get_authors(db=Depends(get_db)):
+#     authors = db.query(Author).all()
+#
+#     return authors
 
-    return authors
 
-
-@router.post("/authors", tags=['Authors'])
+@router.post("/authors", tags=['Add Authors'])
 async def add_authors(
         db_session: Annotated[AsyncSession, Depends(get_db)], data: RegisterInput = Body()
 ):
     author = await AuthorOpration(db_session).create(
-        name=data.name, biography=data.biography
+        author_id=data.author_id, name=data.name, biography=data.biography
     )
     return author
 
 
 @router.get("/authors/{author_id}", tags=['Authors'])
-async def get_user_profile(
+async def get_author_profile(
         db_session: Annotated[AsyncSession, Depends(get_db)], author_id: int
 ):
     author_detail = await AuthorOpration(db_session).get_author_by_id(author_id)
@@ -36,17 +36,18 @@ async def get_user_profile(
     return author_detail
 
 
-@router.post("/books", tags=['Books'])
+@router.post("/books", tags=['Add New Books'])
 async def add_new_book(
         db_session: Annotated[AsyncSession, Depends(get_db)], data: AddNewBook = Body()
 ):
     new_book = await BookOpration(db_session).create_book(
-        title=data.title, author=data.author, genre=data.genre, published_date=data.published_date, isbn=data.isbn
+        book_id=data.book_id, title=data.title, author=data.author, genre=data.genre,
+        published_date=data.published_date, isbn=data.isbn, quantity_available=data.quantity_available
     )
     return new_book
 
 
-@router.get("/books/{book_id}", tags=['Books'])
+@router.get("/books/{book_id}", tags=['Get Books By ID'])
 async def get_specific_book_by_id(
         db_session: Annotated[AsyncSession, Depends(get_db)], book_id: int
 ):
@@ -55,12 +56,19 @@ async def get_specific_book_by_id(
     return book_detail
 
 
-@router.get("/books", tags=['Books'])
-async def get_all_books(book: BookOpration = Depends(get_db)) -> List[Books]:
-    return await book.get_all_books()
+def get_db():
+    db = AsyncSession()
+    return BookOpration(db)
 
 
-@router.put("/books/{book_id}", tags=['Books'])
+@router.get("/books", tags=['Get All Books'])
+async def get_all_book(
+        db_session: Annotated[AsyncSession, Depends(get_db)]) -> List[Books]:
+    # book_operation: BookOpration = Depends(get_db)) -> List[Books]:
+    return await BookOpration(db_session).get_all_books()
+
+
+@router.put("/books/{book_id}", tags=['Update Books'])
 async def book_update_detail(
         db_session: Annotated[AsyncSession, Depends(get_db)],
         data: UpdateDetailBooks = Body(),
@@ -71,7 +79,7 @@ async def book_update_detail(
     return update_book
 
 
-@router.delete("/books/{book_id}", tags=['Books'])
+@router.delete("/books/{book_id}", tags=['Delete Books'])
 async def delete_book(
         db_session: Annotated[AsyncSession, Depends(get_db)],
         data: DeleteBooks = Body(),
