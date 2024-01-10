@@ -1,7 +1,8 @@
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import desc
 from db.model import Books, Author
-from exeptions import AuthorNotFound, BooksNotFound
+from exeptions import AuthorNotFound, BooksNotFound, DeleteSuccessful
 from typing import List, Optional
 
 
@@ -87,10 +88,34 @@ class BookOpration:
             books_data.book_id = book_id
             return books_data
 
-    async def delete_book(self, book_id: int) -> None:
+    async def delete_book(self, book_id: int):
+        query_set = sa.select(Books).where(Books.book_id == book_id)
         delete_query = sa.delete(Books).where(
             Books.book_id == book_id
         )
+
         async with self.db_session as session:
+            books_data = await session.scalar(query_set)
+            if books_data is None:
+                raise DeleteSuccessful("/delete")
+
             await session.execute(delete_query)
             await session.commit()
+
+    async def get_books_by_genre(self, genre: str) -> List[Books]:
+        async with self.db_session as session:
+            query = sa.select(Books).where(Books.genre == genre)
+            books_list = await session.execute(query)
+        return books_list.scalars().all()
+
+    async def get_books_by_author(self, author: str) -> List[Books]:
+        async with self.db_session as session:
+            query = sa.select(Books).where(Books.author == author)
+            books_list = await session.execute(query)
+        return books_list.scalars().all()
+
+    async def get_books_sorted_by_published_date(self) -> List[Books]:
+        async with self.db_session as session:
+            query = sa.select(Books).order_by(desc(Books.published_date))
+            books_list = await session.execute(query)
+        return books_list.scalars().all()
