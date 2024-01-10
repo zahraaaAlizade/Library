@@ -25,5 +25,4 @@ class UpdateDetailBooks(BaseModel):
     published_date: str
 
 
-class DeleteBooks(BaseModel):
-    book_id: int
+
