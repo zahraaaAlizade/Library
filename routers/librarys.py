@@ -1,10 +1,9 @@
-from typing import Annotated
+from typing import Annotated, Optional
 from fastapi import APIRouter, Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.engin import get_db
 from oprations.query_opration import AuthorOpration, BookOpration
-from schema._input import RegisterInput, AddNewBook, UpdateDetailBooks, DeleteBooks
-
+from schema._input import RegisterInput, AddNewBook, UpdateDetailBooks
 
 router = APIRouter()
 
@@ -77,10 +76,31 @@ async def book_update_detail(
 
 @router.delete("/books/{book_id}", tags=['Delete Books'])
 async def delete_book(
-        db_session: Annotated[AsyncSession, Depends(get_db)],
-        data: DeleteBooks = Body(),
+        db_session: Annotated[AsyncSession, Depends(get_db)], book_id: int
+
 ):
     remove_book = await BookOpration(db_session).delete_book(
-        data.book_id
+        book_id
     )
     return remove_book
+
+
+@router.get("/books/filter/sort", tags=['Filter and Sort All Books'])
+async def get_book_sort_and_filter(
+        db_session: Annotated[AsyncSession, Depends(get_db)],
+        genre: Optional[str] = None,
+        author: Optional[str] = None,
+        sort_by_published_date: Optional[str] = None,
+):
+    books_operation = BookOpration(db_session)
+
+    if sort_by_published_date:
+        sorted_books = await books_operation.get_books_sorted_by_published_date()
+    elif genre:
+        filtered_books = await books_operation.get_books_by_genre(genre)
+    elif author:
+        filtered_books = await books_operation.get_books_by_author(author)
+    else:
+        filtered_books = await books_operation.get_all_books()
+
+    return sorted_books if sort_by_published_date else filtered_books
